@@ -16,6 +16,7 @@ model User {
   avatar       String?
   accessToken  String
   refreshToken String?
+  isAdmin      Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
