@@ -5,6 +5,8 @@ import { useState, useEffect } from "react"
 import { useTheme } from "@/components/providers/theme-provider"
 import { useAuth } from "@/lib/auth"
 
+// 需要在文件顶部导入Link
+
 export function Navigation() {
   const { theme, setTheme } = useTheme()
   const { user, logout } = useAuth()
@@ -48,9 +50,21 @@ export function Navigation() {
 
           {user ? (
             <div className="flex items-center space-x-3">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {user.username}
-              </span>
+              <Link
+                href="/profile"
+                className="flex items-center space-x-2 rounded-full bg-purple-100 px-3 py-1.5 transition-all hover:bg-purple-200 dark:bg-purple-900/30 dark:hover:bg-purple-900/50"
+              >
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.username} className="h-6 w-6 rounded-full" />
+                ) : (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-500 text-xs font-bold text-white">
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                  {user.username}
+                </span>
+              </Link>
               <button
                 onClick={logout}
                 className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
