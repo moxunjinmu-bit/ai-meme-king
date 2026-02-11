@@ -12,6 +12,7 @@ interface Meme {
   title: string
   content: string
   tags: string | null
+  imageUrl: string | null
   voteCount: number
   createdAt: string
   createdBy: {
@@ -180,6 +181,17 @@ export default function MemeDetailPage() {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {meme.title}
               </h1>
+
+              {/* 图片 */}
+              {meme.imageUrl && (
+                <div className="mt-4">
+                  <img
+                    src={meme.imageUrl}
+                    alt={meme.title}
+                    className="max-h-96 w-full rounded-xl object-contain"
+                  />
+                </div>
+              )}
 
               <p className="mt-4 whitespace-pre-wrap text-lg text-gray-700 dark:text-gray-300">
                 {meme.content}

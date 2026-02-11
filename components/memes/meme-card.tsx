@@ -11,6 +11,7 @@ interface MemeCardProps {
     title: string
     content: string
     tags?: string | null
+    imageUrl?: string | null
     voteCount: number
     createdBy?: {
       id: string
@@ -150,6 +151,15 @@ export function MemeCard({ meme }: MemeCardProps) {
       <div className="absolute inset-0 bg-gradient-to-br from-purple-400/5 via-transparent to-pink-400/5 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none" />
 
       <Link href={`/meme/${meme.id}`} className="block">
+        {meme.imageUrl && (
+          <div className="mb-3 overflow-hidden rounded-xl">
+            <img
+              src={meme.imageUrl}
+              alt={meme.title}
+              className="h-32 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
+        )}
         <h3 className="text-lg font-bold text-gray-900 dark:text-white">
           {meme.title}
         </h3>
