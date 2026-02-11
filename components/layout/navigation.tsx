@@ -26,6 +26,12 @@ export function Navigation() {
 
         <div className="flex items-center space-x-4">
           <Link
+            href="/search"
+            className="text-sm font-medium text-gray-700 transition-colors hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400"
+          >
+            搜索
+          </Link>
+          <Link
             href="/rankings"
             className="text-sm font-medium text-gray-700 transition-colors hover:text-purple-600 dark:text-gray-300 dark:hover:text-purple-400"
           >
