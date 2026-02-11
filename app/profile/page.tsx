@@ -25,16 +25,20 @@ interface Meme {
   title: string
   content: string
   voteCount: number
-  status: string
+  status?: string
   createdAt: string
+  createdBy?: {
+    username: string
+  }
 }
 
 export default function ProfilePage() {
   const router = useRouter()
   const { user, loading: authLoading, logout } = useAuth()
-  const [activeTab, setActiveTab] = useState<"votes" | "memes">("votes")
+  const [activeTab, setActiveTab] = useState<"votes" | "memes" | "favorites">("votes")
   const [votes, setVotes] = useState<Vote[]>([])
   const [memes, setMemes] = useState<Meme[]>([])
+  const [favorites, setFavorites] = useState<Meme[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -63,6 +67,13 @@ export default function ProfilePage() {
       const memesData = await memesRes.json()
       if (memesData.success) {
         setMemes(memesData.data.memes)
+      }
+
+      // 获取收藏列表
+      const favoritesRes = await fetch("/api/user/favorites")
+      const favoritesData = await favoritesRes.json()
+      if (favoritesData.success) {
+        setFavorites(favoritesData.data.memes)
       }
     } catch (error) {
       console.error("获取用户数据失败:", error)
@@ -123,6 +134,9 @@ export default function ProfilePage() {
                     <span className="text-green-600 dark:text-green-400">
                       投稿数：{memes.length}
                     </span>
+                    <span className="text-pink-600 dark:text-pink-400">
+                      收藏数：{favorites.length}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -136,7 +150,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Tab切换 */}
-          <div className="mb-6 flex gap-2">
+          <div className="mb-6 flex gap-2 flex-wrap">
             <button
               onClick={() => setActiveTab("votes")}
               className={`rounded-full px-6 py-2 font-medium transition-all ${
@@ -156,6 +170,16 @@ export default function ProfilePage() {
               }`}
             >
               我的投稿 ({memes.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("favorites")}
+              className={`rounded-full px-6 py-2 font-medium transition-all ${
+                activeTab === "favorites"
+                  ? "bg-pink-600 text-white"
+                  : "bg-white/50 text-gray-700 hover:bg-white dark:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800"
+              }`}
+            >
+              我的收藏 ({favorites.length})
             </button>
           </div>
 
@@ -189,6 +213,38 @@ export default function ProfilePage() {
                       <span>{vote.meme.voteCount} 票</span>
                       <span>作者：{vote.meme.createdBy.username}</span>
                       <span>投票时间：{new Date(vote.createdAt).toLocaleDateString('zh-CN')}</span>
+                    </div>
+                  </Link>
+                ))
+              )
+            ) : activeTab === "favorites" ? (
+              favorites.length === 0 ? (
+                <div className="rounded-xl bg-white/50 p-8 text-center dark:bg-gray-800/50">
+                  <p className="text-gray-500 dark:text-gray-400">还没有收藏</p>
+                  <Link
+                    href="/"
+                    className="mt-4 inline-block text-pink-600 hover:underline dark:text-pink-400"
+                  >
+                    去发现好梗 →
+                  </Link>
+                </div>
+              ) : (
+                favorites.map((meme) => (
+                  <Link
+                    key={meme.id}
+                    href={`/meme/${meme.id}`}
+                    className="block rounded-xl border border-pink-200/50 bg-white/80 p-4 transition-all hover:-translate-y-1 hover:shadow-lg dark:border-pink-800/50 dark:bg-gray-800/80"
+                  >
+                    <h3 className="font-medium text-gray-900 dark:text-white">
+                      {meme.title}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+                      {meme.content}
+                    </p>
+                    <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+                      <span>{meme.voteCount} 票</span>
+                      <span>作者：{meme.createdBy?.username || "未知"}</span>
+                      <span>{new Date(meme.createdAt).toLocaleDateString('zh-CN')}</span>
                     </div>
                   </Link>
                 ))

@@ -25,6 +25,7 @@ model User {
   aiCharacters AICharacter[]
   chatMessages ChatMessage[]
   comments     Comment[]
+  favorites    Favorite[]
 }
 
 // 梗表
@@ -42,9 +43,10 @@ model Meme {
   updatedAt     DateTime @updatedAt
 
   // 关联
-  createdBy     User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy     User       @relation(fields: [createdById], references: [id], onDelete: Cascade)
   votes         Vote[]
   comments      Comment[]
+  favorites     Favorite[]
 
   @@index([status])
   @@index([voteCount])
@@ -93,6 +95,21 @@ model ChatMessage {
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([characterId, createdAt])
+}
+
+// 收藏表
+model Favorite {
+  id        String   @id @default(cuid())
+  memeId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // 关联
+  meme      Meme     @relation(fields: [memeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([memeId, userId])
+  @@index([userId, createdAt])
 }
 
 // 评论表
