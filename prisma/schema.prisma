@@ -24,6 +24,7 @@ model User {
   memes        Meme[]
   aiCharacters AICharacter[]
   chatMessages ChatMessage[]
+  comments     Comment[]
 }
 
 // 梗表
@@ -43,6 +44,7 @@ model Meme {
   // 关联
   createdBy     User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
   votes         Vote[]
+  comments      Comment[]
 
   @@index([status])
   @@index([voteCount])
@@ -91,4 +93,24 @@ model ChatMessage {
   user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([characterId, createdAt])
+}
+
+// 评论表
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  memeId    String
+  userId    String
+  parentId  String?  // 回复评论的ID，null表示一级评论
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  meme      Meme      @relation(fields: [memeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([memeId, createdAt])
+  @@index([parentId])
 }

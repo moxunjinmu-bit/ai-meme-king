@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { Navigation } from "@/components/layout/navigation"
+import { CommentSection } from "@/components/comments/comment-section"
 import { useAuth } from "@/lib/auth"
 
 interface Meme {
@@ -248,6 +249,9 @@ export default function MemeDetailPage() {
               </div>
             </div>
           )}
+
+          {/* 评论区 */}
+          <CommentSection memeId={memeId} />
         </div>
       </div>
     </main>
