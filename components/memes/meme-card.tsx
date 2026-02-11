@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth"
+import { useToast } from "@/components/ui/toast"
 
 interface MemeCardProps {
   meme: {
@@ -21,6 +22,7 @@ interface MemeCardProps {
 
 export function MemeCard({ meme }: MemeCardProps) {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const [voted, setVoted] = useState(false)
   const [votes, setVotes] = useState(meme.voteCount)
   const [loading, setLoading] = useState(false)
@@ -73,11 +75,12 @@ export function MemeCard({ meme }: MemeCardProps) {
       if (result.success) {
         setVoted(result.data.voted)
         setVotes((prev) => (result.data.voted ? prev + 1 : prev - 1))
+        showToast(result.data.voted ? "投票成功！" : "已取消投票", "success")
       } else {
-        alert(result.error || "操作失败")
+        showToast(result.error || "操作失败", "error")
       }
     } catch (error) {
-      alert("网络错误，请稍后重试")
+      showToast("网络错误，请稍后重试", "error")
     } finally {
       setLoading(false)
     }

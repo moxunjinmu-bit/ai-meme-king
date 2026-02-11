@@ -3,19 +3,19 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Navigation } from "@/components/layout/navigation"
+import { useToast } from "@/components/ui/toast"
 
 export default function SubmitPage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [tags, setTags] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
 
     try {
       const response = await fetch("/api/memes/submit", {
@@ -29,12 +29,13 @@ export default function SubmitPage() {
       const result = await response.json()
 
       if (result.success) {
+        showToast("投稿成功！", "success")
         router.push("/")
       } else {
-        setError(result.error || "投稿失败")
+        showToast(result.error || "投稿失败", "error")
       }
     } catch (err) {
-      setError("网络错误")
+      showToast("网络错误，请稍后重试", "error")
     } finally {
       setLoading(false)
     }
@@ -51,12 +52,6 @@ export default function SubmitPage() {
           </h1>
 
           <div className="rounded-2xl border border-green-200/50 bg-white/80 p-8 shadow-lg backdrop-blur-sm dark:border-green-800/50 dark:bg-gray-800/80">
-            {error && (
-              <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-600 dark:bg-red-900/20 dark:text-red-400">
-                {error}
-              </div>
-            )}
-
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label
