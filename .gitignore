@@ -1,0 +1,40 @@
+# SecondMe 敏感配置
+.secondme/
+
+# 依赖
+node_modules/
+.pnp
+.pnp.js
+
+# 测试
+coverage/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# 数据库
+*.db
+*.db-journal
+
+# 环境变量
+.env
+.env*.local
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统
+.DS_Store
+Thumbs.db

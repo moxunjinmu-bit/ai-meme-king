@@ -1,0 +1,94 @@
+// Prisma Schema for AI梗王之王
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id           String   @id
+  username     String
+  avatar       String?
+  accessToken  String
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联
+  votes        Vote[]
+  memes        Meme[]
+  aiCharacters AICharacter[]
+  chatMessages ChatMessage[]
+}
+
+// 梗表
+model Meme {
+  id            String   @id @default(cuid())
+  title         String
+  content       String
+  imageUrl      String?
+  tags          String
+  voteCount     Int      @default(0)
+  createdById   String
+  isAIGenerated Boolean  @default(false)
+  status        String   @default("pending") // pending, approved, rejected
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关联
+  createdBy     User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  votes         Vote[]
+
+  @@index([status])
+  @@index([voteCount])
+}
+
+// 投票表
+model Vote {
+  id        String   @id @default(cuid())
+  memeId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // 关联
+  meme      Meme     @relation(fields: [memeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([memeId, userId])
+}
+
+// AI 角色表
+model AICharacter {
+  id          String   @id @default(cuid())
+  name        String
+  personality String
+  avatar      String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  createdBy   User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  chatMessages ChatMessage[]
+}
+
+// 聊天消息表
+model ChatMessage {
+  id         String   @id @default(cuid())
+  characterId String
+  userId     String
+  message    String
+  isFromAI   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // 关联
+  character  AICharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([characterId, createdAt])
+}
