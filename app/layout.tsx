@@ -4,6 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { ToastProvider } from "@/components/ui/toast"
 import { SWRProvider } from "@/components/providers/swr-provider"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,7 +24,9 @@ export default function RootLayout({
         <SWRProvider>
           <ThemeProvider>
             <ToastProvider>
-              {children}
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
             </ToastProvider>
           </ThemeProvider>
         </SWRProvider>
