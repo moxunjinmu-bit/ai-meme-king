@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth"
 import { useToast } from "@/components/ui/toast"
+import { ShareButton } from "./share-button"
 
 interface MemeCardProps {
   meme: {
@@ -208,6 +209,8 @@ export function MemeCard({ meme }: MemeCardProps) {
           >
             <span>{favoriteLoading ? "..." : favorited ? "♥ 已收藏" : "♡ 收藏"}</span>
           </button>
+
+          <ShareButton memeId={meme.id} title={meme.title} />
         </div>
 
         <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">

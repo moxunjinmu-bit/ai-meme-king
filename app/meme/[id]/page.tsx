@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { Navigation } from "@/components/layout/navigation"
 import { CommentSection } from "@/components/comments/comment-section"
+import { ShareButton } from "@/components/memes/share-button"
 import { useAuth } from "@/lib/auth"
 
 interface Meme {
@@ -227,6 +228,8 @@ export default function MemeDetailPage() {
                 <span className="text-xl">{voted ? "✓" : "👍"}</span>
                 <span>{voted ? "已投票" : "投票"}</span>
               </button>
+
+              <ShareButton memeId={meme.id} title={meme.title} />
 
               <div className="text-right">
                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
