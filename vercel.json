@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_SECONDME_REDIRECT_URI": "https://ai-meme-king.vercel.app/api/auth/callback"
+    "NEXT_PUBLIC_SECONDME_REDIRECT_URI": "@next_public_secondme_redirect_uri"
   },
   "builds": [
     {

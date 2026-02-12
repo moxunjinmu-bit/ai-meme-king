@@ -1,121 +1,205 @@
 # Vercel 部署指南
 
-## 环境要求
+## 前置条件
 
-- Node.js 18+
-- Vercel 账号
-- GitHub 账号（已关联）
+- Vercel 账号（免费）
+- GitHub 账号
+- 项目已推送到 GitHub
 
-## 部署步骤
+## 快速部署
 
-### 1. 准备环境变量
+### 1. 创建 PostgreSQL 数据库（必需）
 
-在 Vercel 控制台添加以下环境变量：
+**⚠️ 重要：SQLite 无法在 Vercel 持久化，必须使用 PostgreSQL**
 
-| 变量名 | 说明 | 示例值 |
-|--------|------|--------|
-| `DATABASE_URL` | 数据库连接字符串 | `file:./dev.db` |
-| `NEXT_PUBLIC_SECONDME_CLIENT_ID` | SecondMe OAuth Client ID | `9141c8d7-3d15-4ba8-bc5d-1034423009cb` |
-| `NEXT_PUBLIC_SECONDME_REDIRECT_URI` | OAuth回调地址 | `https://你的域名/api/auth/callback` |
+#### 推荐：Vercel Postgres
 
-### 2. Vercel Postgres 配置（推荐）
+1. 登录 [Vercel Dashboard](https://vercel.com/dashboard)
+2. 创建新项目，导入 GitHub 仓库
+3. 在项目页面点击 **Storage** → **Create Database** → **Postgres**
+4. 选择区域（建议选香港或东京）
+5. 点击 **Connect** 将数据库连接到项目
 
-由于 SQLite 在 Vercel 服务器less环境下无法持久化，建议迁移到 Vercel Postgres：
+Vercel 会自动配置环境变量，无需手动设置 `DATABASE_URL`
 
-```bash
-# 1. 在 Vercel 控制台创建 Postgres 数据库
-# Storage -> Create Database -> Postgres
+### 2. 配置 SecondMe OAuth
 
-# 2. 更新 DATABASE_URL 环境变量
-# 使用 Vercel 自动生成的 Postgres URL
-
-# 3. 修改 schema.prisma 使用 PostgreSQL
-```
-
-更新 `prisma/schema.prisma`：
-
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-```
+1. 登录 [SecondMe 开发者后台](https://second.me)
+2. 找到你的应用，添加回调地址：
+   ```
+   https://你的域名/api/auth/callback
+   ```
+3. 在 Vercel **Environment Variables** 中设置：
+   | 变量名 | 值 |
+   |--------|-----|
+   | `NEXT_PUBLIC_SECONDME_CLIENT_ID` | `9141c8d7-3d15-4ba8-bc5d-1034423009cb` |
+   | `NEXT_PUBLIC_SECONDME_REDIRECT_URI` | `https://你的域名/api/auth/callback` |
 
 ### 3. 一键部署
+
+点击下方按钮：
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/moxunjinmu-bit/ai-meme-king)
 
 ### 4. 数据库迁移
 
-部署后执行数据库迁移：
+首次部署后，数据库表结构需要手动创建：
 
+**方法 A：Vercel CLI**
 ```bash
-# 本地执行
+# 安装 Vercel CLI
+npm i -g vercel
+
+# 登录
+vercel login
+
+# 进入项目目录
+cd ai-meme-king
+
+# 连接项目
+vercel link
+
+# 执行数据库迁移
+vercel env pull  # 拉取环境变量
 npx prisma migrate deploy
-
-# 或在 Vercel 控制台运行
-# Project Settings -> Build & Development Settings -> Build Command:
-# prisma migrate deploy && next build
+npx prisma db seed
 ```
 
-### 5. SecondMe OAuth 配置
-
-1. 登录 SecondMe 开发者后台
-2. 添加回调地址：`https://你的域名/api/auth/callback`
-3. 更新 Client ID 和 Secret（如需）
-
-## 注意事项
-
-### SQLite 限制
-
-⚠️ **重要**: Vercel 的 Serverless 环境不支持持久化 SQLite 文件。每次部署后数据会重置。
-
-**解决方案**:
-1. 使用 Vercel Postgres（推荐）
-2. 使用 Supabase PostgreSQL
-3. 使用 PlanetScale MySQL
-
-### 图片上传
-
-上传的图片会存储在 `/public/uploads/memes/` 目录，在 Vercel 上同样无法持久化。
-
-**解决方案**:
-1. 使用 Cloudinary 等云存储
-2. 使用 AWS S3 + CloudFront
-3. 使用 Vercel Blob Storage
-
-## 本地开发
-
+**方法 B：本地执行**
 ```bash
-# 安装依赖
-npm install
+# 1. 从 Vercel 获取 DATABASE_URL
+# Project Settings → Environment Variables → DATABASE_URL
 
-# 设置环境变量
-cp .env.example .env
-# 编辑 .env 文件
-
-# 数据库迁移
-npx prisma migrate dev
-
-# 启动开发服务器
-npm run dev
+# 2. 本地设置环境变量并执行迁移
+export DATABASE_URL="postgres://..."
+npx prisma migrate deploy
+npx prisma db seed
 ```
 
-## 故障排查
+## 部署后配置
 
-### 构建失败
+### 设置自定义域名（可选）
 
-检查构建日志，常见问题：
-- 依赖安装失败：`npm install` 权限问题
-- 类型错误：TypeScript 严格模式检查
-- Prisma 生成失败：`postinstall` 钩子未执行
+1. Vercel 项目 → **Settings** → **Domains**
+2. 添加你的域名
+3. 在域名 DNS 设置中添加 CNAME 记录：
+   ```
+   CNAME 你的域名 cname.vercel-dns.com
+   ```
+4. 更新 SecondMe OAuth 回调地址为新域名
+
+### 图片上传配置（可选）
+
+当前图片上传到本地 `public/uploads/` 目录，在 Vercel 上无法持久化。
+
+**方案 1：Cloudinary（推荐）**
+
+1. 注册 [Cloudinary](https://cloudinary.com)
+2. 获取 API Key 和 Secret
+3. 在 Vercel 环境变量中添加：
+   ```
+   CLOUDINARY_CLOUD_NAME=xxx
+   CLOUDINARY_API_KEY=xxx
+   CLOUDINARY_API_SECRET=xxx
+   ```
+4. 修改上传代码使用 Cloudinary SDK
+
+**方案 2：Vercel Blob**
+
+使用 Vercel 原生的 Blob 存储服务：
+```bash
+npm install @vercel/blob
+```
+
+## 常见问题
+
+### 部署失败
+
+**问题：** `prisma migrate deploy` 失败
+
+**解决：**
+1. 检查 `DATABASE_URL` 是否设置正确
+2. 确认数据库用户有创建表的权限
+3. 检查 SSL 模式：`sslmode=require`
+
+**问题：** 构建超时
+
+**解决：**
+```json
+// vercel.json
+{
+  "maxDuration": 60
+}
+```
 
 ### 运行时错误
 
-- **数据库连接失败**: 检查 DATABASE_URL 格式
-- **OAuth 登录失败**: 检查回调地址配置
-- **图片无法显示**: 检查上传目录权限
+**问题：** `Error: Can't reach database server`
 
-## 联系方式
+**解决：**
+- 检查数据库连接字符串
+- 确认数据库允许 Vercel IP 访问
+- 使用连接池：`?pgbouncer=true`
 
-有问题请提交 Issue: https://github.com/moxunjinmu-bit/ai-meme-king/issues
+**问题：** OAuth 登录失败
+
+**解决：**
+1. 检查 `NEXT_PUBLIC_SECONDME_REDIRECT_URI` 是否与访问地址一致
+2. 确认 SecondMe 后台已添加该回调地址
+3. 注意区分 `http` 和 `https`
+
+### 数据丢失
+
+**问题：** 每次部署后数据重置
+
+**解决：** 这是 SQLite 的问题，必须迁移到 PostgreSQL：
+```bash
+# 查看当前使用的数据库
+npx prisma studio
+
+# 确认 DATABASE_URL 是 PostgreSQL 而不是 SQLite
+```
+
+## 监控与日志
+
+### 查看日志
+
+Vercel Dashboard → **Deployments** → 点击部署 → **Logs**
+
+### 性能监控
+
+Vercel Dashboard → **Analytics** → 启用 Web Vitals
+
+### 错误监控
+
+建议集成 Sentry：
+```bash
+npm install @sentry/nextjs
+```
+
+## 更新部署
+
+代码推送后 Vercel 会自动重新部署：
+
+```bash
+git add .
+git commit -m "更新内容"
+git push
+```
+
+Vercel 会自动：
+1. 拉取最新代码
+2. 运行 `npm install`
+3. 运行 `npm run build`（包含 `prisma migrate deploy`）
+4. 部署新版本
+
+## 相关文档
+
+- [PostgreSQL 迁移详细指南](./POSTGRESQL_MIGRATION.md)
+- [项目进度报告](./PROGRESS.md)
+- [API 设计文档](./API.md)
+
+## 获取帮助
+
+遇到问题请提交 Issue：
+https://github.com/moxunjinmu-bit/ai-meme-king/issues
