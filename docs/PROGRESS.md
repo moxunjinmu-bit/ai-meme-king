@@ -29,9 +29,11 @@ MVP核心功能    [████████████████████
 
 ### ✅ 数据库与后端 (100%)
 - [x] Prisma Schema 设计（User, Meme, Vote, Comment, AICharacter, ChatMessage）
-- [x] SQLite 数据库配置
+- [x] SQLite 数据库配置（开发环境）
+- [x] PostgreSQL 数据库配置（生产环境）
 - [x] 数据库迁移执行
 - [x] 种子数据填充（5个示例梗）
+- [x] Vercel Postgres 部署配置
 
 ### ✅ 认证系统 (100%)
 - [x] SecondMe OAuth 登录流程
@@ -215,6 +217,13 @@ E2E测试:        0% (待补充)
 ---
 
 ## 最近更新记录
+
+### 2026-02-12 - PostgreSQL 迁移完成
+- ✅ 更新 Prisma schema 支持 PostgreSQL
+- ✅ 创建 .env.example 环境变量模板
+- ✅ 添加数据库迁移脚本
+- ✅ 创建详细迁移文档
+- ✅ 更新 Vercel 部署配置
 
 ### 2026-02-12 - 完整功能开发完成
 - ✅ 梗详情页面开发完成
