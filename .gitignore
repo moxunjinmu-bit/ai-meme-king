@@ -19,6 +19,9 @@ dist/
 *.db
 *.db-journal
 
+# 上传的文件
+public/uploads/
+
 # 环境变量
 .env
 .env*.local

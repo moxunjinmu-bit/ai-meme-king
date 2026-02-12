@@ -1,0 +1,135 @@
+// Prisma Schema for AI梗王之王 (PostgreSQL 版本 - 用于 Vercel 部署)
+// 使用此文件替换 schema.prisma 以部署到 Vercel Postgres
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id           String   @id
+  username     String
+  avatar       String?
+  accessToken  String
+  refreshToken String?
+  isAdmin      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // 关联
+  votes        Vote[]
+  memes        Meme[]
+  aiCharacters AICharacter[]
+  chatMessages ChatMessage[]
+  comments     Comment[]
+  favorites    Favorite[]
+}
+
+// 梗表
+model Meme {
+  id            String   @id @default(cuid())
+  title         String
+  content       String
+  imageUrl      String?
+  tags          String
+  voteCount     Int      @default(0)
+  createdById   String
+  isAIGenerated Boolean  @default(false)
+  status        String   @default("pending") // pending, approved, rejected
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关联
+  createdBy     User       @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  votes         Vote[]
+  comments      Comment[]
+  favorites     Favorite[]
+
+  @@index([status])
+  @@index([voteCount])
+}
+
+// 投票表
+model Vote {
+  id        String   @id @default(cuid())
+  memeId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // 关联
+  meme      Meme     @relation(fields: [memeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([memeId, userId])
+}
+
+// AI 角色表
+model AICharacter {
+  id          String   @id @default(cuid())
+  name        String
+  personality String
+  avatar      String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  createdBy   User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  chatMessages ChatMessage[]
+}
+
+// 聊天消息表
+model ChatMessage {
+  id         String   @id @default(cuid())
+  characterId String
+  userId     String
+  message    String
+  isFromAI   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  // 关联
+  character  AICharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([characterId, createdAt])
+}
+
+// 收藏表
+model Favorite {
+  id        String   @id @default(cuid())
+  memeId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  // 关联
+  meme      Meme     @relation(fields: [memeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([memeId, userId])
+  @@index([userId, createdAt])
+}
+
+// 评论表
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  memeId    String
+  userId    String
+  parentId  String?  // 回复评论的ID，null表示一级评论
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  meme      Meme      @relation(fields: [memeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+
+  @@index([memeId, createdAt])
+  @@index([parentId])
+}
