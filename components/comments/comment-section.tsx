@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { useToast } from "@/components/ui/toast"
+import { InlineLoginPrompt } from "@/components/auth/login-prompt"
 
 interface Comment {
   id: string
@@ -30,6 +31,7 @@ export function CommentSection({ memeId }: CommentSectionProps) {
   const [content, setContent] = useState("")
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
 
   useEffect(() => {
     fetchComments()
@@ -53,7 +55,7 @@ export function CommentSection({ memeId }: CommentSectionProps) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user) {
-      window.location.href = "/api/auth/login"
+      setShowLoginPrompt(true)
       return
     }
 
@@ -121,6 +123,13 @@ export function CommentSection({ memeId }: CommentSectionProps) {
           </button>
         </div>
       </form>
+
+      {/* 登录提示 */}
+      {showLoginPrompt && (
+        <div className="mb-6">
+          <InlineLoginPrompt onClose={() => setShowLoginPrompt(false)} />
+        </div>
+      )}
 
       {/* 评论列表 */}
       <div className="space-y-4">

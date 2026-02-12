@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Hero } from "@/components/sections/hero"
 import { MemeGrid } from "@/components/memes/meme-grid"
 import { Navigation } from "@/components/layout/navigation"
+import { GlobalLoginBanner } from "@/components/auth/global-login-banner"
 
 export default function HomePage() {
   return (
@@ -22,6 +23,7 @@ export default function HomePage() {
         </div>
         <MemeGrid sort="hot" />
       </section>
+      <GlobalLoginBanner />
     </main>
   )
 }

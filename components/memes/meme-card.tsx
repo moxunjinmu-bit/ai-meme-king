@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useAuth } from "@/lib/auth"
 import { useToast } from "@/components/ui/toast"
 import { ShareButton } from "./share-button"
+import { InlineLoginPrompt } from "@/components/auth/login-prompt"
 
 interface MemeCardProps {
   meme: {
@@ -30,6 +31,8 @@ export function MemeCard({ meme }: MemeCardProps) {
   const [loading, setLoading] = useState(false)
   const [favorited, setFavorited] = useState(false)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [pendingAction, setPendingAction] = useState<"vote" | "favorite" | null>(null)
 
   // 检查用户是否已投票
   useEffect(() => {
@@ -73,8 +76,9 @@ export function MemeCard({ meme }: MemeCardProps) {
 
   const handleVote = async () => {
     if (!user?.id) {
-      // 未登录，跳转到登录页
-      window.location.href = "/api/auth/login"
+      // 未登录，显示登录提示
+      setPendingAction("vote")
+      setShowLoginPrompt(true)
       return
     }
 
@@ -111,7 +115,9 @@ export function MemeCard({ meme }: MemeCardProps) {
 
   const handleFavorite = async () => {
     if (!user?.id) {
-      window.location.href = "/api/auth/login"
+      // 未登录，显示登录提示
+      setPendingAction("favorite")
+      setShowLoginPrompt(true)
       return
     }
 
@@ -217,6 +223,15 @@ export function MemeCard({ meme }: MemeCardProps) {
           {votes.toLocaleString()} 票
         </span>
       </div>
+
+      {/* 登录提示弹窗 */}
+      {showLoginPrompt && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-black/50 p-4">
+          <div onClick={(e) => e.stopPropagation()}>
+            <InlineLoginPrompt onClose={() => setShowLoginPrompt(false)} />
+          </div>
+        </div>
+      )}
     </article>
   )
 }

@@ -1,9 +1,8 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { Navigation } from "@/components/layout/navigation"
-import { useAuth } from "@/lib/auth"
+import { AuthGuard } from "@/components/auth/auth-guard"
 import { useToast } from "@/components/ui/toast"
 
 interface Character {
@@ -28,9 +27,7 @@ interface Message {
   }
 }
 
-export default function ChatPage() {
-  const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+function ChatContent() {
   const { showToast } = useToast()
   const [characters, setCharacters] = useState<Character[]>([])
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null)
@@ -46,15 +43,8 @@ export default function ChatPage() {
   const [newCharacterPersonality, setNewCharacterPersonality] = useState("")
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/api/auth/login")
-      return
-    }
-
-    if (user) {
-      fetchCharacters()
-    }
-  }, [user, authLoading, router])
+    fetchCharacters()
+  }, [])
 
   useEffect(() => {
     if (selectedCharacter) {
@@ -183,180 +173,167 @@ export default function ChatPage() {
     }
   }
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-pink-900">
-        <Navigation />
-        <div className="container mx-auto px-4 py-12">
-          <div className="mx-auto max-w-6xl">
-            <div className="h-96 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="h-96 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
         </div>
-      </main>
+      </div>
     )
   }
 
-  if (!user) {
-    return null
-  }
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-pink-900">
-      <Navigation />
+    <>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          💬 AI 角色聊天
+        </h1>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white transition-all hover:shadow-lg"
+        >
+          + 创建角色
+        </button>
+      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              💬 AI 角色聊天
-            </h1>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* 角色列表 */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300">
+            选择角色
+          </h2>
+          {characters.map((character) => (
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white transition-all hover:shadow-lg"
+              key={character.id}
+              onClick={() => setSelectedCharacter(character)}
+              className={`w-full rounded-xl border p-4 text-left transition-all ${
+                selectedCharacter?.id === character.id
+                  ? "border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-900/30"
+                  : "border-gray-200 bg-white/80 hover:bg-white dark:border-gray-700 dark:bg-gray-800/80 dark:hover:bg-gray-800"
+              }`}
             >
-              + 创建角色
-            </button>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* 角色列表 */}
-            <div className="space-y-3">
-              <h2 className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                选择角色
-              </h2>
-              {characters.map((character) => (
-                <button
-                  key={character.id}
-                  onClick={() => setSelectedCharacter(character)}
-                  className={`w-full rounded-xl border p-4 text-left transition-all ${
-                    selectedCharacter?.id === character.id
-                      ? "border-purple-500 bg-purple-50 dark:border-purple-400 dark:bg-purple-900/30"
-                      : "border-gray-200 bg-white/80 hover:bg-white dark:border-gray-700 dark:bg-gray-800/80 dark:hover:bg-gray-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{character.avatar || "🤖"}</span>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {character.name}
-                      </p>
-                      <p className="line-clamp-1 text-xs text-gray-500 dark:text-gray-400">
-                        {character.personality}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* 聊天区域 */}
-            <div className="lg:col-span-2">
-              {selectedCharacter ? (
-                <div className="flex h-[600px] flex-col rounded-2xl border border-purple-200/50 bg-white/90 shadow-lg dark:border-purple-800/50 dark:bg-gray-800/90">
-                  {/* 聊天头部 */}
-                  <div className="flex items-center gap-3 border-b border-gray-100 p-4 dark:border-gray-700">
-                    <span className="text-3xl">
-                      {selectedCharacter.avatar || "🤖"}
-                    </span>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {selectedCharacter.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {selectedCharacter.personality.slice(0, 50)}...
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 消息列表 */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.length === 0 ? (
-                      <div className="flex h-full items-center justify-center">
-                        <p className="text-gray-500 dark:text-gray-400">
-                          开始和 {selectedCharacter.name} 聊天吧！
-                        </p>
-                      </div>
-                    ) : (
-                      messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex gap-3 ${
-                            message.isFromAI ? "" : "flex-row-reverse"
-                          }`}
-                        >
-                          <div
-                            className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                              message.isFromAI
-                                ? "bg-purple-100 dark:bg-purple-900/30"
-                                : "bg-blue-100 dark:bg-blue-900/30"
-                            }`}
-                          >
-                            <span className="text-sm">
-                              {message.isFromAI
-                                ? selectedCharacter.avatar || "🤖"
-                                : "👤"}
-                            </span>
-                          </div>
-                          <div
-                            className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                              message.isFromAI
-                                ? "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
-                                : "bg-blue-500 text-white"
-                            }`}
-                          >
-                            <p className="text-sm">{message.message}</p>
-                            <p
-                              className={`mt-1 text-xs ${
-                                message.isFromAI
-                                  ? "text-gray-400"
-                                  : "text-blue-200"
-                              }`}
-                            >
-                              {new Date(message.createdAt).toLocaleTimeString(
-                                "zh-CN",
-                                { hour: "2-digit", minute: "2-digit" }
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-
-                  {/* 输入框 */}
-                  <form
-                    onSubmit={handleSendMessage}
-                    className="border-t border-gray-100 p-4 dark:border-gray-700"
-                  >
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        placeholder={`和 ${selectedCharacter.name} 聊天...`}
-                        disabled={sending}
-                        className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-purple-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                      />
-                      <button
-                        type="submit"
-                        disabled={sending || !inputMessage.trim()}
-                        className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2 text-sm font-medium text-white transition-all hover:shadow-lg disabled:opacity-50"
-                      >
-                        {sending ? "..." : "发送"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              ) : (
-                <div className="flex h-[600px] items-center justify-center rounded-2xl border border-purple-200/50 bg-white/80 dark:border-purple-800/50 dark:bg-gray-800/80">
-                  <p className="text-gray-500 dark:text-gray-400">
-                    请选择一个角色开始聊天
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{character.avatar || "🤖"}</span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {character.name}
+                  </p>
+                  <p className="line-clamp-1 text-xs text-gray-500 dark:text-gray-400">
+                    {character.personality}
                   </p>
                 </div>
-              )}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* 聊天区域 */}
+        <div className="lg:col-span-2">
+          {selectedCharacter ? (
+            <div className="flex h-[600px] flex-col rounded-2xl border border-purple-200/50 bg-white/90 shadow-lg dark:border-purple-800/50 dark:bg-gray-800/90">
+              {/* 聊天头部 */}
+              <div className="flex items-center gap-3 border-b border-gray-100 p-4 dark:border-gray-700">
+                <span className="text-3xl">
+                  {selectedCharacter.avatar || "🤖"}
+                </span>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {selectedCharacter.name}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {selectedCharacter.personality.slice(0, 50)}...
+                  </p>
+                </div>
+              </div>
+
+              {/* 消息列表 */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.length === 0 ? (
+                  <div className="flex h-full items-center justify-center">
+                    <p className="text-gray-500 dark:text-gray-400">
+                      开始和 {selectedCharacter.name} 聊天吧！
+                    </p>
+                  </div>
+                ) : (
+                  messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-3 ${
+                        message.isFromAI ? "" : "flex-row-reverse"
+                      }`}
+                    >
+                      <div
+                        className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                          message.isFromAI
+                            ? "bg-purple-100 dark:bg-purple-900/30"
+                            : "bg-blue-100 dark:bg-blue-900/30"
+                        }`}
+                      >
+                        <span className="text-sm">
+                          {message.isFromAI
+                            ? selectedCharacter.avatar || "🤖"
+                            : "👤"}
+                        </span>
+                      </div>
+                      <div
+                        className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                          message.isFromAI
+                            ? "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
+                            : "bg-blue-500 text-white"
+                        }`}
+                      >
+                        <p className="text-sm">{message.message}</p>
+                        <p
+                          className={`mt-1 text-xs ${
+                            message.isFromAI
+                              ? "text-gray-400"
+                              : "text-blue-200"
+                          }`}
+                        >
+                          {new Date(message.createdAt).toLocaleTimeString(
+                            "zh-CN",
+                            { hour: "2-digit", minute: "2-digit" }
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* 输入框 */}
+              <form
+                onSubmit={handleSendMessage}
+                className="border-t border-gray-100 p-4 dark:border-gray-700"
+              >
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder={`和 ${selectedCharacter.name} 聊天...`}
+                    disabled={sending}
+                    className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-purple-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    disabled={sending || !inputMessage.trim()}
+                    className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2 text-sm font-medium text-white transition-all hover:shadow-lg disabled:opacity-50"
+                  >
+                    {sending ? "..." : "发送"}
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
+          ) : (
+            <div className="flex h-[600px] items-center justify-center rounded-2xl border border-purple-200/50 bg-white/80 dark:border-purple-800/50 dark:bg-gray-800/80">
+              <p className="text-gray-500 dark:text-gray-400">
+                请选择一个角色开始聊天
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -411,6 +388,25 @@ export default function ChatPage() {
           </div>
         </div>
       )}
+    </>
+  )
+}
+
+export default function ChatPage() {
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-blue-900 dark:to-pink-900">
+      <Navigation />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mx-auto max-w-6xl">
+          <AuthGuard
+            title="登录后开始 AI 聊天"
+            description="与各种 AI 角色互动，讨论梗文化，创建属于你自己的 AI 角色！"
+            icon="🤖"
+          >
+            <ChatContent />
+          </AuthGuard>
+        </div>
+      </div>
     </main>
   )
 }
